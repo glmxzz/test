@@ -1,0 +1,36 @@
+//获取git的版本
+ext.getGitVersion = { ->
+    def gitCommitShortHash = ""
+    try {
+        gitCommitShortHash = 'git log -1 --pretty=%h'.execute([], project.rootDir).text.trim()
+        if (gitCommitShortHash.isEmpty()) {
+            gitCommitShortHash = 'git rev-parse --short HEAD'.execute().text.trim()
+        }
+        println "git version : " + gitCommitShortHash
+        return "\"" + gitCommitShortHash + "\""
+    }
+    catch (ignored) {
+        logger.error('------------------------Git not found ------------------------')
+        return gitCommitShortHash.isEmpty() ? "unknow" : gitCommitShortHash
+    }
+}
+
+ext.getGitVersionWithoutQuote = { ->
+    return getGitVersion().replace("\"", "")
+}
+
+ext.uploadPgy = { apkPath ->
+    println("${apkPath} uploading, please wait . . .")
+    def myCommand = "curl http://www.pgyer.com/apiv1/app/upload -F uKey=3ce2070c3501288228461269f54d0ee0 -F " +
+            "_api_key=f8f497dac619cff4457bcfc90d5c08da -F file=@" + apkPath + " -F " +
+            "updateDescription="
+    ProcessBuilder builder = new ProcessBuilder(myCommand.split(' '))
+    Process process = builder.start();
+    process.waitFor()
+    println process.err.text
+    println process.text
+}
+
+ext.releaseTime = {->
+    return new Date().format("yyMMdd", TimeZone.getTimeZone("UTC"))
+}
